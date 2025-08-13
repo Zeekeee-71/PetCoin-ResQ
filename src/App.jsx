@@ -1,15 +1,18 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Coins, Smartphone, Heart, Shield, TrendingUp, Users, Zap, Star, ExternalLink } from 'lucide-react'
 import SolSendIsland from "@/components/solana/SolSendIsland";
 import Ping from "@/components/solana/Ping"
+import PurchaseModal from "@/components/solana/PurchaseModal"
 import dogBanner from './assets/real_dog_yellow_hoodie.png'
 import dogScene from './assets/00003-871641687.png'
 import './App.css'
 
 function App() {
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header with Dog Banner */}
@@ -27,10 +30,14 @@ function App() {
               <a href="#app" className="text-white hover:text-yellow-300 transition-colors">AI App</a>
               <a href="#community" className="text-white hover:text-yellow-300 transition-colors">Community</a>
             </div>
-            <SolSendIsland client:load />
-            <Button className="petcoin-button font-semibold px-6">
+
+            <Button 
+              className="petcoin-button font-semibold px-6"
+              onClick={() => setIsPurchaseModalOpen(true)}
+            >
               Buy RESQ
             </Button>
+
           </nav>
           
           <div className="grid md:grid-cols-2 gap-8 items-center">
@@ -46,10 +53,16 @@ function App() {
                 with the love for our furry friends, creating a cryptocurrency that supports animal welfare worldwide.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="petcoin-button text-lg px-8 py-3">
+
+                <Button 
+                  size="lg" 
+                  className="petcoin-button text-lg px-8 py-3"
+                  onClick={() => setIsPurchaseModalOpen(true)}
+                >
                   <Coins className="mr-2 h-5 w-5" />
                   Get RESQ Tokens
                 </Button>
+
                 {/*
                 <Button size="lg" variant="outline" className="bg-white/10 border-white text-white hover:bg-white hover:text-gray-900">
                   <Smartphone className="mr-2 h-5 w-5" />
@@ -391,10 +404,16 @@ function App() {
               support animal welfare, and unlock exclusive AI-powered features.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="petcoin-button text-lg px-8">
+
+              <Button 
+                size="lg" 
+                className="petcoin-button text-lg px-8"
+                onClick={() => setIsPurchaseModalOpen(true)}
+              >
                 <Coins className="mr-2 h-5 w-5" />
                 Buy RESQ Tokens
               </Button>
+
               {/*
               <Button size="lg" variant="outline">
                 Read Whitepaper
@@ -485,6 +504,11 @@ function App() {
           </div>
         </div>
       </footer>
+
+      <PurchaseModal 
+        open={isPurchaseModalOpen}
+        onOpenChange={setIsPurchaseModalOpen}
+      />
     </div>
   )
 }

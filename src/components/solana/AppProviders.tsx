@@ -4,7 +4,7 @@ import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import {
   PhantomWalletAdapter,
-  BackpackWalletAdapter,
+//  BackpackWalletAdapter,
   SolflareWalletAdapter,
   TorusWalletAdapter,
   LedgerWalletAdapter,
@@ -16,7 +16,7 @@ export default function AppProviders({ children }: { children: React.ReactNode }
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
-      new BackpackWalletAdapter(),
+//      new BackpackWalletAdapter(),
       new SolflareWalletAdapter({ network: "mainnet-beta" }),
       new TorusWalletAdapter(),
       new LedgerWalletAdapter(),
@@ -25,7 +25,7 @@ export default function AppProviders({ children }: { children: React.ReactNode }
   );
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

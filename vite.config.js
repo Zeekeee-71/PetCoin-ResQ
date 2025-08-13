@@ -12,9 +12,17 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
     },
   },
   css: {
     postcss: './postcss.config.js',
+  },
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['buffer', 'crypto-browserify', 'stream-browserify'],
   }
 })
