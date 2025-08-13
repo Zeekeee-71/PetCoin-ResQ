@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Coins, Smartphone, Heart, Shield, TrendingUp, Users, Zap, Star, ExternalLink } from 'lucide-react'
+import SolSendIsland from "@/components/solana/SolSendIsland";
+import Ping from "@/components/solana/Ping"
 import dogBanner from './assets/real_dog_yellow_hoodie.png'
 import dogScene from './assets/00003-871641687.png'
 import './App.css'
@@ -25,6 +27,7 @@ function App() {
               <a href="#app" className="text-white hover:text-yellow-300 transition-colors">AI App</a>
               <a href="#community" className="text-white hover:text-yellow-300 transition-colors">Community</a>
             </div>
+            <SolSendIsland client:load />
             <Button className="petcoin-button font-semibold px-6">
               Buy RESQ
             </Button>
