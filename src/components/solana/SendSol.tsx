@@ -1,27 +1,49 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { useWallet, WalletNotSelectedError } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, CheckCircle } from "lucide-react";
+import { ExternalLink, CheckCircle, ArrowRight } from "lucide-react";
 
 const RECIPIENT = new PublicKey("AaHWh8pxgU6iE6m15Z7Hj93MZGTmwwCaJEbVYvPjApeD"); // <-- set this
+const SOL_TO_RESQ_RATIO = 1600000; // 1 SOL = 1.6M RESQ tokens
 
 export default function SendSol({ onTransactionStateChange }) {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
 
-  const [amount, setAmount] = useState("");
+  const [solAmount, setSolAmount] = useState("0.625");
+  const [resqAmount, setResqAmount] = useState("1000000");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [transactionSignature, setTransactionSignature] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
   const lamports = useMemo(() => {
-    const n = Number(amount);
+    const n = Number(solAmount);
     return Number.isFinite(n) && n > 0 ? Math.round(n * LAMPORTS_PER_SOL) : 0;
-  }, [amount]);
+  }, [solAmount]);
+
+  const handleSolAmountChange = (value: string) => {
+    setSolAmount(value);
+    const solValue = Number(value);
+    if (Number.isFinite(solValue) && solValue > 0) {
+      setResqAmount(Math.round(solValue * SOL_TO_RESQ_RATIO).toString());
+    } else {
+      setResqAmount("0");
+    }
+  };
+
+  const handleResqAmountChange = (value: string) => {
+    setResqAmount(value);
+    const resqValue = Number(value);
+    if (Number.isFinite(resqValue) && resqValue > 0) {
+      setSolAmount((resqValue / SOL_TO_RESQ_RATIO).toFixed(6));
+    } else {
+      setSolAmount("0");
+    }
+  };
 
   const onSend = useCallback(async () => {
     try {
@@ -57,7 +79,7 @@ export default function SendSol({ onTransactionStateChange }) {
 
       setTransactionSignature(sig);
       setIsSuccess(true);
-      setStatus("Transaction successful! Your RESQ purchase is complete.");
+      setStatus(`Transaction successful! You will receive ${Number(resqAmount).toLocaleString()} RESQ tokens.`);
       onTransactionStateChange?.(false);
     } catch (e: any) {
       setStatus(e?.message ?? "Transaction failed.");
@@ -80,19 +102,47 @@ export default function SendSol({ onTransactionStateChange }) {
       
       {publicKey && !isSuccess && (
         <>
-          <label className="text-sm font-medium text-gray-700">
-            Amount (SOL)
-            <input
-              type="number"
-              step="0.000001"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full mt-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              placeholder="1.0"
-              disabled={busy}
-            />
-          </label>
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700">
+                Amount (SOL)
+                <input
+                  type="number"
+                  step="0.000001"
+                  min="0"
+                  value={solAmount}
+                  onChange={(e) => handleSolAmountChange(e.target.value)}
+                  className="w-full mt-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="0.625"
+                  disabled={busy}
+                />
+              </label>
+            </div>
+            
+            <div className="flex items-center justify-center mt-6">
+              <ArrowRight className="h-5 w-5 text-gray-400" />
+            </div>
+            
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700">
+                RESQ Tokens
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={resqAmount}
+                  onChange={(e) => handleResqAmountChange(e.target.value)}
+                  className="w-full mt-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="1000000"
+                  disabled={busy}
+                />
+              </label>
+            </div>
+          </div>
+          
+          <div className="text-xs text-gray-500 text-center">
+            Conversion Rate: 1 SOL = {SOL_TO_RESQ_RATIO.toLocaleString()} RESQ
+          </div>
           
           <Button
             onClick={onSend}
@@ -112,6 +162,10 @@ export default function SendSol({ onTransactionStateChange }) {
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="h-5 w-5 text-green-500" />
               <span className="font-semibold text-green-800">Success!</span>
+              <br />
+              <span className="text-sm text-gray-600">
+                Watch this website for RESQ distribution details.
+              </span>
             </div>
           )}
           

@@ -5,13 +5,24 @@ import { Badge } from '@/components/ui/badge.jsx'
 import { Coins, Smartphone, Heart, Shield, TrendingUp, Users, Zap, Star, ExternalLink } from 'lucide-react'
 import SolSendIsland from "@/components/solana/SolSendIsland";
 import Ping from "@/components/solana/Ping"
-import PurchaseModal from "@/components/solana/PurchaseModal"
+import PurchaseSection from "@/components/solana/PurchaseSection"
 import dogBanner from './assets/real_dog_yellow_hoodie.png'
 import dogScene from './assets/00003-871641687.png'
 import './App.css'
 
 function App() {
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [showPurchaseSection, setShowPurchaseSection] = useState(false);
+
+  const scrollToPurchaseSection = () => {
+    setShowPurchaseSection(true);
+    // Scroll to purchase section after a brief delay to allow DOM update
+    setTimeout(() => {
+      const element = document.getElementById('purchase-section');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -33,7 +44,7 @@ function App() {
 
             <Button 
               className="petcoin-button font-semibold px-6"
-              onClick={() => setIsPurchaseModalOpen(true)}
+              onClick={scrollToPurchaseSection}
             >
               Buy RESQ
             </Button>
@@ -57,7 +68,7 @@ function App() {
                 <Button 
                   size="lg" 
                   className="petcoin-button text-lg px-8 py-3"
-                  onClick={() => setIsPurchaseModalOpen(true)}
+                  onClick={scrollToPurchaseSection}
                 >
                   <Coins className="mr-2 h-5 w-5" />
                   Get RESQ Tokens
@@ -397,29 +408,33 @@ function App() {
             */}
           </div>
 
-          <div className="petcoin-card p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold mb-4">Ready to Get Started?</h3>
-            <p className="text-gray-600 mb-6">
-              Join the pet-powered cryptocurrency revolution today. Buy RESQ tokens, 
-              support animal welfare, and unlock exclusive AI-powered features.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-
-              <Button 
-                size="lg" 
-                className="petcoin-button text-lg px-8"
-                onClick={() => setIsPurchaseModalOpen(true)}
-              >
-                <Coins className="mr-2 h-5 w-5" />
-                Buy RESQ Tokens
-              </Button>
-
-              {/*
-              <Button size="lg" variant="outline">
-                Read Whitepaper
-              </Button>
-              */}
-            </div>
+          <div className="max-w-4xl mx-auto" id="purchase-section">
+            {!showPurchaseSection ? (
+              <div className="petcoin-card p-8">
+                <h3 className="text-2xl font-bold mb-4">Ready to Get Started?</h3>
+                <p className="text-gray-600 mb-6">
+                  Join the pet-powered cryptocurrency revolution today. Buy RESQ tokens, 
+                  support animal welfare, and unlock exclusive AI-powered features.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button 
+                    size="lg" 
+                    className="petcoin-button text-lg px-8"
+                    onClick={scrollToPurchaseSection}
+                  >
+                    <Coins className="mr-2 h-5 w-5" />
+                    Get RESQ Tokens
+                  </Button>
+                  {/*
+                  <Button size="lg" variant="outline">
+                    Read Whitepaper
+                  </Button>
+                  */}
+                </div>
+              </div>
+            ) : (
+              <PurchaseSection />
+            )}
           </div>
         </div>
       </section>
@@ -505,10 +520,6 @@ function App() {
         </div>
       </footer>
 
-      <PurchaseModal 
-        open={isPurchaseModalOpen}
-        onOpenChange={setIsPurchaseModalOpen}
-      />
     </div>
   )
 }

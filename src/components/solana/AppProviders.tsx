@@ -8,14 +8,24 @@ import {
   SolflareWalletAdapter,
   TorusWalletAdapter,
   LedgerWalletAdapter,
+  CoinbaseWalletAdapter,
+  NekoWalletAdapter,
+  HyperPayWalletAdapter,
+
 } from "@solana/wallet-adapter-wallets";
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export default function AppProviders({ children }: { children: React.ReactNode }) {
-  const endpoint = clusterApiUrl("mainnet-beta"); // change to "devnet" for testing
+  // const endpoint = clusterApiUrl("mainnet-beta"); // change to "devnet" for testing
+  const endpoint = useMemo(() => {
+    return "https://petcoinai.info/api/solana";
+  }, []);
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
+      new CoinbaseWalletAdapter(),
+      new NekoWalletAdapter(),
+      new HyperPayWalletAdapter(),
 //      new BackpackWalletAdapter(),
       new SolflareWalletAdapter({ network: "mainnet-beta" }),
       new TorusWalletAdapter(),
