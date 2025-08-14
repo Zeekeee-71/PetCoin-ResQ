@@ -1,41 +1,47 @@
 import React, { useMemo } from "react";
-import { clusterApiUrl } from "@solana/web3.js";
+import type { Commitment, ConnectionConfig } from "@solana/web3.js";
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import {
   PhantomWalletAdapter,
-//  BackpackWalletAdapter,
   SolflareWalletAdapter,
   TorusWalletAdapter,
   LedgerWalletAdapter,
   CoinbaseWalletAdapter,
   NekoWalletAdapter,
   HyperPayWalletAdapter,
-
 } from "@solana/wallet-adapter-wallets";
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export default function AppProviders({ children }: { children: React.ReactNode }) {
-  // const endpoint = clusterApiUrl("mainnet-beta"); // change to "devnet" for testing
-  const endpoint = useMemo(() => {
-    return "https://petcoinai.info/api/solana";
-  }, []);
+  // Your reverse-proxied endpoints
+  const rpcEndpoint = useMemo(() => "https://petcoinai.info/api/solana", []);
+  const wsEndpoint  = useMemo(() => "wss://petcoinai.info/api/solana/ws", []);
+
+  const connectionConfig = useMemo<ConnectionConfig>(() => ({
+    commitment: "processed" as Commitment,   // or "confirmed"/"processed"/"finalized"
+    wsEndpoint,
+    // optional tweaks:
+    // confirmTransactionInitialTimeout: 60_000,
+    // disableRetryOnRateLimit: true,
+  }), [wsEndpoint]);
+
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
       new CoinbaseWalletAdapter(),
       new NekoWalletAdapter(),
       new HyperPayWalletAdapter(),
-//      new BackpackWalletAdapter(),
       new SolflareWalletAdapter({ network: "mainnet-beta" }),
       new TorusWalletAdapter(),
       new LedgerWalletAdapter(),
     ],
     []
   );
+
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets}>
+    <ConnectionProvider endpoint={rpcEndpoint} config={connectionConfig}>
+      <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

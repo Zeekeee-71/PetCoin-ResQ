@@ -19,6 +19,9 @@ export default function SendSol({ onTransactionStateChange }) {
   const [status, setStatus] = useState("");
   const [transactionSignature, setTransactionSignature] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
 
   const lamports = useMemo(() => {
     const n = Number(solAmount);
@@ -45,6 +48,39 @@ export default function SendSol({ onTransactionStateChange }) {
     }
   };
 
+  const submitEmail = useCallback(async () => {
+    if (!email.trim()) return;
+    
+    setEmailSubmitting(true);
+    try {
+      const response = await fetch('https://petcoinai.info/api/resq-notify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          transactionSignature,
+          resqAmount: Number(resqAmount),
+          solAmount: Number(solAmount),
+          walletAddress: publicKey?.toString()
+        }),
+      });
+      
+      if (response.ok) {
+        setEmailSubmitted(true);
+      } else {
+        throw new Error('Failed to submit email');
+      }
+    } catch (error) {
+      console.error('Email submission failed:', error);
+      // Still mark as submitted to prevent retry loops
+      setEmailSubmitted(true);
+    } finally {
+      setEmailSubmitting(false);
+    }
+  }, [email, transactionSignature, resqAmount, solAmount, publicKey]);
+
   const onSend = useCallback(async () => {
     try {
       if (!publicKey) throw new WalletNotSelectedError();
@@ -58,7 +94,8 @@ export default function SendSol({ onTransactionStateChange }) {
       const feeBuffer = 5000; // small cushion for fees
       if (balance < lamports + feeBuffer) throw new Error("Insufficient SOL for amount + fee.");
 
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("finalized");
+      // Get fresh blockhash right before creating transaction
+      const { blockhash } = await connection.getLatestBlockhash("finalized");
 
       const tx = new Transaction({
         feePayer: publicKey,
@@ -75,11 +112,32 @@ export default function SendSol({ onTransactionStateChange }) {
       const sig = await sendTransaction(tx, connection);
 
       setStatus("Submitting and confirming...");
-      await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+      // Get fresh blockhash for confirmation to avoid expiry issues
+      const { blockhash: confirmBlockhash, lastValidBlockHeight: confirmLastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
+      await connection.confirmTransaction({ signature: sig, blockhash: confirmBlockhash, lastValidBlockHeight: confirmLastValidBlockHeight }, "confirmed");
 
       setTransactionSignature(sig);
       setIsSuccess(true);
       setStatus(`Transaction successful! You will receive ${Number(resqAmount).toLocaleString()} RESQ tokens.`);
+      
+      // Record the purchase
+      try {
+        await fetch('https://petcoinai.info/api/resqBuy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            walletAddress: publicKey.toString(),
+            solAmount: Number(solAmount),
+            resqAmount: Number(resqAmount),
+            transactionSignature: sig
+          }),
+        });
+      } catch (error) {
+        console.error('Failed to record purchase:', error);
+      }
+      
       onTransactionStateChange?.(false);
     } catch (e: any) {
       setStatus(e?.message ?? "Transaction failed.");
@@ -174,7 +232,7 @@ export default function SendSol({ onTransactionStateChange }) {
           </div>
           
           {transactionSignature && (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -188,6 +246,46 @@ export default function SendSol({ onTransactionStateChange }) {
               <div className="text-xs text-gray-500 break-all">
                 Transaction: {transactionSignature}
               </div>
+              
+              {!emailSubmitted && (
+                <div className="border-t pt-3 mt-2">
+                  <div className="text-sm font-medium text-gray-700 mb-2">
+                    Get notified when tokens are available
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your.email@example.com"
+                      className="flex-1 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      disabled={emailSubmitting}
+                    />
+                    <Button
+                      onClick={submitEmail}
+                      disabled={!email.trim() || emailSubmitting}
+                      size="sm"
+                      className="bg-teal-600 hover:bg-teal-700"
+                    >
+                      {emailSubmitting ? "..." : "Notify Me"}
+                    </Button>
+                  </div>
+                  <div className="text-xs text-amber-600 mt-1">
+                    ⚠️ Without an email, you'll need to check back frequently for token availability
+                  </div>
+                </div>
+              )}
+              
+              {emailSubmitted && (
+                <div className="border-t pt-3 mt-2 text-center">
+                  <div className="text-sm text-green-700 font-medium mb-1">
+                    ✅ Email submitted successfully!
+                  </div>
+                  <div className="text-xs text-green-600">
+                    You'll be notified when your RESQ tokens are available to claim
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
